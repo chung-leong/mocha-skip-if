@@ -39,16 +39,23 @@ class Word extends Function {
     Object.defineProperty(this, word._name, { get });
   }
 
-  _invoke(name, arg) {
+  _invoke(name, arg1, arg2) {
     const prop = this._after[name];
-    return prop._run(arg);
+    return prop._run(arg1, arg2);
   }
 
-  _run(arg) {
-    const result = !!arg;
+  _run(arg1, arg2) {
+    const result = !!arg1;
     const condition = this._root._create(undefined, result);
     condition._add();
     return condition;
+  }
+
+  _bool(result, arg1, arg) {
+    if (typeof(result) === 'function') {
+      result = result(arg1, arg);
+    }
+    return !!result;
   }
 }
 
@@ -70,22 +77,14 @@ class Condition extends Word {
     this._func = func;
   }
 
-  _result(arg) {
-    let result = this._func;
-    if (typeof(result) === 'function') {
-      result = result(arg);
-    }
-    return !!result;
-  }
-
   _add() {
     // add boolean value to expression
-    const result = this._result();
+    const result = this._bool(this._func);
     this._root._add(result.toString());
   }
 
-  _run(arg) {
-    const result = this._result(arg);
+  _run(arg1, arg2) {
+    const result = this._bool(this._func, arg1, arg2);
     const condition = this._root._create(undefined, result);
     condition._add();
     return condition;
@@ -240,4 +239,5 @@ function attachMultipleToMultiple(words1, words2) {
 
 const skip = new Skip;
 skip.Skip = Skip;
+global.__skip_constructor = skip;
 module.export = skip;
