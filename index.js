@@ -3,10 +3,10 @@ class Word extends Function {
     if (root) {
       // "this" here will be the parent object
       // call invoke() which will redirect to _run()
-      super('arg', `return this._invoke('${name}', arg);`);
+      super('arg1', 'arg2', `return this._invoke('${name}', arg1, arg2);`);
     } else {
       // create an instance using constructor stored in global
-      super('arg', `return new __skip_constructor(arg);`);
+      super('arg1', 'arg2', `return new __skip_constructor(arg1, arg2);`);
     }
     this._name = name;
     this._root = root;
@@ -125,6 +125,9 @@ class Skip extends Word {
     attachMultipleToMultiple(this._binaries, this._qwords);
     // attach not to and (skip.if.[condition].and.not)
     attachMultipleToMultiple(this._binaries, this._unaries);
+    // these words cannot be used as properties
+    const keywords = [ ...this._unaries, ...this._binaries, ...this._qwords];
+    this._illegals= keywords.map((k) => k.name);
     // add conditions if provided
     if (def) {
       this.condition(def, func);
@@ -150,6 +153,9 @@ class Skip extends Word {
   }
 
   _create(name, func, parent) {
+    if (name.charAt(0) === '_' || this._illegals.includes(name)) {
+      throw new Error(`Reserved word cannot be used: ${name}`);
+    }
     let word;
     if (typeof(func) === 'function' || !(func instanceof Object)) {
       word = new Condition(this, name, func);
