@@ -1,6 +1,6 @@
 # Mocha-skip-if
 
-This module enable you to selectively skip certain Mocha tests based on runtime conditions. It'll call `it.skip()` or `describe.skip()` if the stated conditions are met and `it()` or `describe()` otherwise.
+This module enables you to selectively skip certain Mocha tests based on runtime conditions. It'll call `it.skip()` or `describe.skip()` when the expressed conditions are met and `it()` or `describe()` otherwise.
 
 ## Basic Usage
 
@@ -22,7 +22,7 @@ describe('Test', function() {
 
 This module adds the global variable `skip`. The method `condition()` is used to define conditions. In the example above, two conditions are defined: **watching** and **debugging**. The latter requires one argument.
 
-Once the conditions are defined, they become available as properties of `skip.if` and logical operators like `and` and `not`. The skip statement is then constructed in a semantic style similar to one used by [Chai](https://www.chaijs.com/). Ending in a dot, it should sit atop the relevant describe() or it() call.
+Once the conditions are defined, they become available as properties of `skip.if` and logical operators like `and` and `not`. You can then construct the skip statement in a semantic style similar to the one used by [Chai](https://www.chaijs.com/). Ending in a dot, the statement should sit atop the relevant describe() or it() call.
 
 Instead of `if`, you can also use `when` or `while`. They are synonyms.
 
@@ -74,7 +74,7 @@ describe('Browser specific test', function() {
 })
 ```
 
-In the example above, the tokens `browser` and `is` doesn't do anything. They are just there for documentation purpose.
+In the example above, the tokens `browser` and `is` really doesn't do anything. They are just there to make the code sound like normal English.
 
 You can also define conditions by passing a string and a boolean or a function to `skip.condition()`:
 
@@ -84,7 +84,7 @@ skip.condition('browser.is.chrome', isChrome);
 skip.condition('browser.is.firefox', isFirefox);
 ```
 
-Conditions can be redefined. In the examples above, `browser` is not a condition. It's just a word you have to specify for semantic reason. The expression `skip.if.browser.it()` would cause an error. We can make `skip.if.browser` available as a check for whether the environment is a generic webbrowser by redefining it:
+Conditions can be redefined. In the examples above, `browser` is not a condition. It's just a word you have to specify for semantic reason. The expression `skip.if.browser.it()` would cause an error. We can make `skip.if.browser` available as a check for whether the environment is a generic web-browser by redefining it:
 
 ```js
 skip.condition({
@@ -106,9 +106,9 @@ skip.condition({
 skip.condition('browser', isBrowser);
 ```
 
-Now you can both `skip.if.browser` and `skip.if.browser.is.chrome` as conditions.
+Now you can use both `skip.if.browser` and `skip.if.browser.is.chrome`.
 
-Note that the module will scan function object for attached properties. The following would accomplished the same goal:
+Note that the module will scan function objects for attached properties. The following would accomplished the same goal:
 
 ```js
 function isBrowser() {
@@ -125,7 +125,7 @@ skip.condition({ browser: isBrowser });
 
 ## Skipping tests permanently
 
-This module will call `it.skip()` or `describe.skip()` normally if the condition specified is true. This means the test will be marked by Mocha as **pending**. If the test in question will never pass and should be skipped permanently, you can accomplish that by adding `forever` to the expression:
+This module will call `it.skip()` or `describe.skip()` normally if the condition specified evaluates to true. This means the test will be marked by Mocha as **pending**. If the test in question will never ever pass and should be skipped permanently, you can accomplish that by adding `forever` to the expression:
 
 ```js
 skip.forever.if.browser.is.ie.
@@ -138,7 +138,7 @@ The synonyms `entirely` and `permanently` can be used in place of `forever`.
 
 ## Inverting conditions
 
-Normally, a test is skipped if the condition specified is true. You can invert the behavior--skipping a test when the condition is false--by using the `unless` instead of `if`:
+Normally, a test is skipped if the condition specified is true. You can invert the behavior--skipping a test when the condition is false--by using `unless` instead of `if`:
 
 ```js
 skip.unless.os.is.mac.and.browser.is.chrome.
@@ -176,7 +176,9 @@ skip.condition('browser', (name = 'any') => {
 });
 ```
 
-Now `skip.if.browser.it(...)` will no longer throw.
+Now `skip.if.browser.it(...)` will no longer throw. Instead, it'll invoke the callback with the default argument. The expression `skip.if.browser('edge').it(...)` would cause the callback to be invoked twice: once with `name` set to the default and a second time with the name given as an argument.
+
+Callbacks can accept at most two arguments currently.
 
 ## Asynchronous conditions
 
@@ -184,7 +186,7 @@ Sometimes, test cases would only pass if external, remote resources are availabl
 
 ## Skipping a test unconditionally
 
-Calling `skip.it()` or `skip.describe()` would always skip a test (or set of tests):
+Calling `skip.it()` or `skip.describe()` would always skip a test (or a set of tests):
 
 ```js
 skip.
@@ -195,7 +197,7 @@ it('should do the impossible', function() {
 
 ## Creating isolated instances
 
-Most of the time, test conditions affect your entire test suite and the use of the global `skip` object is sufficient. When conditions are localized to a particular test script, you might find it useful to an isolated instance of Skip. You can do so by calling `skip` as a function.
+Most of the time, test conditions affect your entire test suite and the use of the global `skip` object is sufficient. When conditions are localized to a particular test script, you might find it useful to use an isolated instance of Skip. You create one by calling `skip` as a function.
 
 ```js
 const skip = global.skip({
