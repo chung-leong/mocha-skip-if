@@ -93,6 +93,40 @@ describe('skip', function() {
       expect(skip._tokens).to.eql([true, '||', '!', false]);
     })
   })
+  describe('unless', function() {
+    it('should invert interpreation of condition', function() {
+      skip.unless(2 + 2 == 4);
+      expect(skip._inverted).to.be.true;
+      expect(skip._tokens).to.eql([ true ]);
+      expect(skip._eval()).to.be.false;
+      skip.unless(2 + 2 == 4).describe('Hello', function() {});
+      expect(describeSkipArgs).to.be.undefined;
+    })
+  })
+  describe('forever', function() {
+    it('should have question words as properties', function() {
+      for (let op of [ 'if', 'when', 'while' ]) {
+        expect(skip.forever).to.have.property(op).that.is.a('function');
+      }
+    })
+    it('should set mode to "permanent" when accessed', function() {
+      skip.forever;
+      expect(skip._mode).to.equal('permanent');
+      skip.forever.if;
+      expect(skip._mode).to.equal('permanent');
+      skip.forever.unless;
+      expect(skip._mode).to.equal('permanent');
+      expect(skip._inverted).to.equal(true);
+    })
+    it('should keep skip() from being called when used', function() {
+      skip.forever.if(2 + 2 == 4).it('Hello forever', function() {});
+      expect(itArgs).to.be.undefined;
+      expect(itSkipArgs).to.be.undefined;
+      skip.if(2 + 2 == 4).it('Hello', function() {});
+      expect(itArgs).to.be.undefined;
+      expect(itSkipArgs).to.contain('Hello');
+    })
+  })
   describe('condition()', function() {
     it('should accept an object as argument', function() {
       const skip = global.skip();

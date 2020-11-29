@@ -22,22 +22,12 @@ class Word extends Function {
   }
 
   _attach(word) {
-    let get;
-    if (!this._root) {
-      // skip object
-      get = function() {
-        // reset (just in case)
-        this._reset();
-        return word;
-      };
-    } else {
-      get = function() {
-        // add token to expression
-        this._check();
-        word._add();
-        return word;
-      };
-    }
+    const get = function() {
+      // add token to expression
+      this._check();
+      word._add();
+      return word;
+    };
     // so we can access the word object without trigger the getter function
     this._props[word._name] = word;
     // attach the getter
@@ -124,9 +114,28 @@ class Condition extends Word {
   }
 }
 
+class Adverb extends Word {
+  constructor(root, name, mode) {
+    super(root, name);
+    this._mode = mode;
+  }
+
+  _add() {
+    this._root._set(this._mode);
+  }
+}
+
+class Inverter extends Word {
+  _add() {
+    this._root._invert();
+  }
+}
+
 class Skip extends Word {
   constructor(def, func) {
     super(null, 'skip');
+    this._mode = undefined;
+    this._inverted = false;
     this._tokens = [];
     this._unaries = [
       new Operator(this, 'not', '!'),
@@ -141,10 +150,29 @@ class Skip extends Word {
       new Word(this, 'when'),
       new Word(this, 'while'),
     ];
+    this._adverbs = [
+      new Adverb(this, 'forever', 'permanent'),
+      new Adverb(this, 'entirely', 'permanent'),
+      new Adverb(this, 'permanently', 'permanent'),
+    ];
+    this._inverters = [
+      new Inverter(this, 'unless'),
+      new Inverter(this, 'until'),
+    ];
+    // attach adverbs to skip (skip.forever)
+    attachManyToOne(this, this._adverbs);
     // attach if to skip (skip.if)
     attachManyToOne(this, this._qwords);
+    // attach unless to skip (skip.unless)
+    attachManyToOne(this, this._inverters);
+    // attach if to forever (skip.forever.if)
+    attachManyToMany(this._adverbs, this._qwords);
+    // attach unless to forever (skip.forever.unless)
+    attachManyToMany(this._adverbs, this._inverters);
     // attach not to if (skip.if.not)
     attachManyToMany(this._qwords, this._unaries);
+    // attach not to unless (skip.unless.not)
+    attachManyToMany(this._inverters, this._unaries);
     // attach if to and (skip.if.[condition].and.if)
     attachManyToMany(this._binaries, this._qwords);
     // attach not to and (skip.if.[condition].and.not)
@@ -168,10 +196,23 @@ class Skip extends Word {
     this._tokens.push(token);
   }
 
+  _set(mode) {
+    this._mode = mode;
+  }
+
+  _invert() {
+    this._inverted = true;
+  }
+
+  _check() {
+    // reset (just in case there're tokens left over)
+    this._reset();
+  }
+
   _reset() {
-    if (this._tokens.length !== 0) {
-      this._tokens = [];
-    }
+    this._tokens = [];
+    this._mode = undefined;
+    this._inverted = false;
   }
 
   _eval() {
@@ -179,7 +220,11 @@ class Skip extends Word {
       return true;
     }
     const expr = this._tokens.join(' ');
-    return eval(expr);
+    let result = eval(expr);
+    if (this._inverted) {
+      result = !result;
+    }
+    return result;
   }
 
   _create(name, func, path, parent) {
@@ -216,6 +261,8 @@ class Skip extends Word {
         if (name) {
           // attach condition to if (skip.if.[condition])
           attachOneToMany(this._qwords, word);
+          // attach condition to unless (skip.unless.[condition])
+          attachOneToMany(this._inverters, word);
           // attach condition to not (skip.if.not.[condition])
           attachOneToMany(this._unaries, word);
           // attach condition to and (skip.if.[condition].and.[condition])
@@ -233,7 +280,9 @@ class Skip extends Word {
   it(desc, func) {
     // call skip() if expression eval to true
     if (this._eval()) {
-      it.skip(desc, func);
+      if (this._mode !== 'permanent') {
+        it.skip(desc, func);
+      }
     } else {
       it(desc, func);
     }
@@ -242,7 +291,9 @@ class Skip extends Word {
 
   describe(desc, func) {
     if (this._eval()) {
-      describe.skip(desc, func);
+      if (this.mode !== 'permanent') {
+        describe.skip(desc, func);
+      }
     } else {
       describe(desc, func);
     }
