@@ -164,7 +164,7 @@ it('should test something', function() {
 })
 ```
 
-You can make a condition both generic and possibly more specific with the help of default arguments:
+You can make a condition both generic and possibly more specific with the help of default argument:
 
 ```js
 skip.condition('browser', (name = 'any') => {
@@ -175,6 +175,8 @@ skip.condition('browser', (name = 'any') => {
   }
 });
 ```
+
+Now `skip.if.browser.it(...)` will no longer throw.
 
 ## Asynchronous conditions
 
