@@ -2,15 +2,15 @@ class Word extends Function {
   constructor(root, name) {
     if (root) {
       // "this" here will be the parent object
-      // call invoke() which will redirect to _run()
+      // call _invoke() which will redirect to _run()
       super('arg1', 'arg2', `return this._invoke('${name}', arg1, arg2);`);
     } else {
       // create an instance using constructor stored in global
-      super('arg1', 'arg2', `return new __skip_constructor(arg1, arg2);`);
+      super('arg1', 'arg2', `return new global.skip.constructor(arg1, arg2);`);
     }
     this._name = name;
     this._root = root;
-    this._after = {};
+    this._props = {};
   }
 
   _add() {
@@ -34,19 +34,19 @@ class Word extends Function {
       };
     }
     // so we can access the word object without trigger the getter function
-    this._after[word._name] = word;
+    this._props[word._name] = word;
     // attach the getter
-    Object.defineProperty(this, word._name, { get });
+    Object.defineProperty(this, word._name, { get, configurable: true });
   }
 
   _invoke(name, arg1, arg2) {
-    const prop = this._after[name];
+    const prop = this._props[name];
     return prop._run(arg1, arg2);
   }
 
   _run(arg1, arg2) {
     const result = !!arg1;
-    const condition = this._root._create(undefined, result);
+    const condition = this._root._create(undefined, result, [], null);
     condition._add();
     return condition;
   }
@@ -80,7 +80,7 @@ class Condition extends Word {
   _add() {
     // add boolean value to expression
     const result = this._bool(this._func);
-    this._root._add(result.toString());
+    this._root._add(result);
   }
 
   _run(arg1, arg2) {
@@ -117,13 +117,13 @@ class Skip extends Word {
       new Word(this, 'while'),
     ];
     // attach if to skip (skip.if)
-    attachMultipleToOne(this, this._qwords);
+    attachManyToOne(this, this._qwords);
     // attach not to if (skip.if.not)
-    attachMultipleToMultiple(this._qwords, this._unaries);
+    attachManyToMany(this._qwords, this._unaries);
     // attach if to and (skip.if.[condition].and.if)
-    attachMultipleToMultiple(this._binaries, this._qwords);
+    attachManyToMany(this._binaries, this._qwords);
     // attach not to and (skip.if.[condition].and.not)
-    attachMultipleToMultiple(this._binaries, this._unaries);
+    attachManyToMany(this._binaries, this._unaries);
     // these words cannot be used as properties
     const keywords = [ ...this._unaries, ...this._binaries, ...this._qwords];
     this._illegals= keywords.map((k) => k.name);
@@ -134,6 +134,12 @@ class Skip extends Word {
   }
 
   _add(token) {
+    if (typeof(token) === 'boolean') {
+      const last = this._tokens[this._tokens.length - 1];
+      if (typeof(last) === 'boolean') {
+        this._tokens.push('&&');
+      }
+    }
     this._tokens.push(token);
   }
 
@@ -151,34 +157,46 @@ class Skip extends Word {
     return eval(expr);
   }
 
-  _create(name, func, parent) {
+  _create(name, func, path, parent) {
     if (name.charAt(0) === '_' || this._illegals.includes(name)) {
       throw new Error(`Reserved word cannot be used: ${name}`);
     }
+    const prev = (parent && name) ? parent._props[name] : null;
     let word;
     if (typeof(func) === 'function' || !(func instanceof Object)) {
       word = new Condition(this, name, func);
-    } else {
-      // permit something like browser.is.edge
-      const def = func;
-      word = new Word(this, name);
-      for (let [ name, func ] of def) {
-        this._create(name, func, word);
+      if (prev) {
+        // copy props
+        for (let wordAfter of Object.values(prev._props)) {
+          word._attach(wordAfter);
+        }
       }
     }
-    if (parent) {
-      this._attach(parent, word);
-    } else {
-      if (name) {
-        // attach condition to if (skip.if.[condition])
-        attachOneToMultiple(this._qwords, word);
-        // attach condition to not (skip.if.not.[condition])
-        attachOneToMultiple(this._unaries, word);
-        // attach condition to and (skip.if.[condition].and.[condition])
-        attachOneToMultiple(this._binaries, word);
+    // permit something like browser.is.edge
+    if (func instanceof Object) {
+      if (!word) {
+        word = prev || new Word(this, name);
       }
-      // attach and to condition (skip.if.[condition].and)
-      attachMultipleToOne(word, this._binaries);
+      const def = func;
+      for (let [ name, func ] of Object.entries(def)) {
+        this._create(name, func, [ ...path, name ], word);
+      }
+    }
+    if (word !== prev) {
+      if (parent) {
+        this._attach(parent, word);
+      } else {
+        if (name) {
+          // attach condition to if (skip.if.[condition])
+          attachOneToMany(this._qwords, word);
+          // attach condition to not (skip.if.not.[condition])
+          attachOneToMany(this._unaries, word);
+          // attach condition to and (skip.if.[condition].and.[condition])
+          attachOneToMany(this._binaries, word);
+        }
+        // attach and to condition (skip.if.[condition].and)
+        attachManyToOne(word, this._binaries);
+      }
     }
     return word;
   }
@@ -206,7 +224,14 @@ class Skip extends Word {
     let def;
     if (cond !== undefined) {
       def = {};
-      def[name] = cond;
+      const pnames = name.split('.');
+      const cname = pnames.pop();
+      let parent = def;
+      for (let pname of pnames) {
+        const gparent = parent;
+        gparent[pname] = parent = {};
+      }
+      parent[cname] = cond;
     } else {
       def = name;
       if (!(def instanceof Object)) {
@@ -214,30 +239,27 @@ class Skip extends Word {
       }
     }
     for (let [ name, func ] of Object.entries(def)) {
-      this._create(name, func);
+      this._create(name, func, [], null);
     }
   }
 }
 
-function attachOneToMultiple(words1, word2) {
-  for (let word1 of words1) {
-    word1._attach(word2);
+function attachOneToMany(words, wordAfter) {
+  for (let word of words) {
+    word._attach(wordAfter);
   }
 }
 
-function attachMultipleToOne(word1, words2) {
-  for (let word2 of words2) {
-    word1._attach(word2);
+function attachManyToOne(word, wordsAfter) {
+  for (let wordAfter of wordsAfter) {
+    word._attach(wordAfter);
   }
 }
 
-function attachMultipleToMultiple(words1, words2) {
-  for (let word2 of words2) {
-    attachOneToMultiple(words1, word2);
+function attachManyToMany(words, wordsAfter) {
+  for (let wordAfter of wordsAfter) {
+    attachOneToMany(words, wordAfter);
   }
 }
 
-const skip = new Skip;
-skip.Skip = Skip;
-global.__skip_constructor = skip;
-module.export = skip;
+global.skip = module.exports = new Skip;
