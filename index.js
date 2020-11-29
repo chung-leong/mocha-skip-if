@@ -17,6 +17,10 @@ class Word extends Function {
     // do nothing
   }
 
+  _check() {
+    // do nothing
+  }
+
   _attach(word) {
     let get;
     if (!this._root) {
@@ -29,6 +33,7 @@ class Word extends Function {
     } else {
       get = function() {
         // add token to expression
+        this._check();
         word._add();
         return word;
       };
@@ -45,15 +50,15 @@ class Word extends Function {
   }
 
   _run(arg1, arg2) {
-    const result = !!arg1;
+    const result = this._bool(arg1);
     const condition = this._root._create(undefined, result, [], null);
     condition._add();
     return condition;
   }
 
-  _bool(result, arg1, arg) {
+  _bool(result, arg1, arg2) {
     if (typeof(result) === 'function') {
-      result = result(arg1, arg);
+      result = result(arg1, arg2);
     }
     return !!result;
   }
@@ -74,27 +79,47 @@ class Operator extends Word {
 class Condition extends Word {
   constructor(root, name, func) {
     super(root, name);
+    if (func.length > 2) {
+      throw new Error(`Callback cannot use more than 2 arguments`);
+    }
     this._func = func;
+    this._pending = false;
   }
 
   _add() {
-    // add boolean value to expression
-    const result = this._bool(this._func);
-    this._root._add(result);
+    if (this._func.length > 0) {
+      // wait for _run() to get called
+      this._pending = true;
+    } else {
+      // add boolean value to expression
+      const result = this._bool(this._func);
+      this._root._add(result);
+    }
+  }
+
+  _check() {
+    if (this._pending) {
+      const count = this._func.length;
+      const args = `${count} argument${count > 1 ? 's' : ''}`;
+      throw new Error(`${this._name}() requires ${args}`)
+    }
   }
 
   _run(arg1, arg2) {
     const result = this._bool(this._func, arg1, arg2);
     const condition = this._root._create(undefined, result);
     condition._add();
+    this._pending = false;
     return condition;
   }
 
   it(desc, func) {
+    this._check();
     this._root.it(desc, func);
   }
 
   describe(desc, func) {
+    this._check();
     this._root.describe(desc, func);
   }
 }
@@ -126,7 +151,7 @@ class Skip extends Word {
     attachManyToMany(this._binaries, this._unaries);
     // these words cannot be used as properties
     const keywords = [ ...this._unaries, ...this._binaries, ...this._qwords];
-    this._illegals= keywords.map((k) => k.name);
+    this._illegals= keywords.map((k) => k._name);
     // add conditions if provided
     if (def) {
       this.condition(def, func);
@@ -158,8 +183,10 @@ class Skip extends Word {
   }
 
   _create(name, func, path, parent) {
-    if (name.charAt(0) === '_' || this._illegals.includes(name)) {
-      throw new Error(`Reserved word cannot be used: ${name}`);
+    if (name) {
+      if (name.charAt(0) === '_' || this._illegals.includes(name)) {
+        throw new Error(`Reserved word cannot be used: ${name}`);
+      }
     }
     const prev = (parent && name) ? parent._props[name] : null;
     let word;
@@ -184,7 +211,7 @@ class Skip extends Word {
     }
     if (word !== prev) {
       if (parent) {
-        this._attach(parent, word);
+        parent._attach(word);
       } else {
         if (name) {
           // attach condition to if (skip.if.[condition])
@@ -194,6 +221,8 @@ class Skip extends Word {
           // attach condition to and (skip.if.[condition].and.[condition])
           attachOneToMany(this._binaries, word);
         }
+      }
+      if(word instanceof Condition) {
         // attach and to condition (skip.if.[condition].and)
         attachManyToOne(word, this._binaries);
       }
