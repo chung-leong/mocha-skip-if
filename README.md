@@ -181,3 +181,24 @@ Now `skip.if.browser.it(...)` will no longer throw.
 ## Asynchronous conditions
 
 Sometimes, test cases would only pass if external, remote resources are available. Checking for their availability would generally require asynchronous function calls, however. This module is not designed to deal with this situation. Consider using [deasync](https://www.npmjs.com/package/deasync) if you're faced with this problem.
+
+## Skipping a test unconditionally
+
+Calling `skip.it()` or `skip.describe()` would always skip a test (or set of tests):
+
+```js
+skip.
+it('should do the impossible', function() {
+  /* ... */
+})
+```
+
+## Creating isolated instances
+
+Most of the time, test conditions affect your entire test suite and the use of the global `skip` object is sufficient. When conditions are localized to a particular test script, you might find it useful to an isolated instance of Skip. You can do so by calling `skip` as a function.
+
+```js
+const skip = global.skip({
+  /* conditions */
+});
+```
