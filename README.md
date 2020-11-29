@@ -1,6 +1,6 @@
 # Mocha-skip-if
 
-This module enable you to selectively skip certain Mocha tests based on runtime conditions. It'll call `it.skip()` or `describe.skip()` if stated conditions are met and `it()` or `describe()` otherwise.
+This module enable you to selectively skip certain Mocha tests based on runtime conditions. It'll call `it.skip()` or `describe.skip()` if the stated conditions are met and `it()` or `describe()` otherwise.
 
 ## Basic Usage
 
