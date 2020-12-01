@@ -119,12 +119,19 @@ describe('skip', function() {
       expect(skip._inverted).to.equal(true);
     })
     it('should keep skip() from being called when used', function() {
-      skip.forever.if(2 + 2 == 4).it('Hello forever', function() {});
+      skip.forever.unless(2 + 2 == 5).it('Hello forever', function() {});
       expect(itArgs).to.be.undefined;
       expect(itSkipArgs).to.be.undefined;
-      skip.if(2 + 2 == 4).it('Hello', function() {});
+      skip.unless(2 + 2 == 5).it('Hello', function() {});
       expect(itArgs).to.be.undefined;
       expect(itSkipArgs).to.contain('Hello');
+    })
+    it('should have it() and describe() methods', function() {
+      expect(skip.forever).to.have.property('it').that.is.a('function');
+      expect(skip.forever).to.have.property('describe').that.is.a('function');
+      skip.forever.it('hello', function() {});
+      expect(itArgs).to.be.undefined;
+      expect(itSkipArgs).to.be.undefined;
     })
   })
   describe('condition()', function() {

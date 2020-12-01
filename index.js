@@ -123,6 +123,14 @@ class Adverb extends Word {
   _add() {
     this._root._set(this._mode);
   }
+
+  it(desc, func) {
+    this._root.it(desc, func);
+  }
+
+  describe(desc, func) {
+    this._root.describe(desc, func);
+  }
 }
 
 class Inverter extends Word {
