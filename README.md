@@ -20,11 +20,11 @@ describe('Test', function() {
 })
 ```
 
-This module adds the global variable `skip`. The method `condition()` is used to define conditions. In the example above, two conditions are defined: **watching** and **debugging**. The latter requires one argument.
+This module adds the global variable `skip`. You call its `condition()` method to define conditions. In the example above, two conditions are defined: **watching** and **debugging**. The latter requires one argument.
 
-Once the conditions are defined, they become available as properties of `skip.if` and logical operators like `and` and `not`. You can then construct the skip statement in a semantic style similar to the one used by [Chai](https://www.chaijs.com/). Ending in a dot, the statement should sit atop the relevant describe() or it() call.
+Once conditions are defined, they become available as properties of `skip.if` and logical operators like `and` and `not`. You can then construct skip statements in a style similar to the one used by [Chai](https://www.chaijs.com/). Ending in a dot, a statement should sit atop the relevant describe() or it() call.
 
-Instead of `if`, you can also use `when` or `while`. They are synonyms.
+Instead of `if`, you can use `when` or `while`. They are synonyms.
 
 ## Using variables
 
@@ -37,7 +37,7 @@ it('should wipe out half of all life in the universe', function() {
 })
 ```
 
-The second `if` in the example above isn't necessarily. The following would also work:
+The second `if` in the example above isn't necessary. The following would also work:
 
 ```js
 skip.if(variable1).or(variable2).
@@ -48,7 +48,7 @@ it('should wipe out half of all life in the universe', function() {
 
 ## Defining conditions
 
-Multiple conditions can be specified by passing an object to `skip.condition()`. This object can in turn contain multiple objects, whose keys are used as semantically meaningful tokens:
+Multiple conditions can be specified by passing an object to `skip.condition()`. This object can in turn contain multiple objects, whose keys are treated as semantically meaningful tokens:
 
 ```js
 skip.condition({
@@ -74,9 +74,9 @@ describe('Browser specific test', function() {
 })
 ```
 
-In the example above, the tokens `browser` and `is` really doesn't do anything. They are just there to make the code sound like normal English.
+In the example above, the tokens `browser` and `is` doesn't do anything. They are just there to make the code read like normal English.
 
-You can also define conditions by passing a string and a boolean or a function to `skip.condition()`:
+You can also define conditions by passing a `string` and a `boolean` or a `function` to `skip.condition()`:
 
 ```js
 skip.condition('browser.is.edge', isEdge);
@@ -108,24 +108,34 @@ skip.condition('browser', isBrowser);
 
 Now you can use both `skip.if.browser` and `skip.if.browser.is.chrome`.
 
-Note that the module will scan function objects for attached properties. The following would accomplished the same goal:
+Note that the module will scan `function` objects for attached properties. You can therefore do the following:
 
 ```js
-function isBrowser() {
+function edge() {
+  /* ... */  
+}
+function chrome() {
+  /* ... */    
+}
+function firefox() {
   /* ... */
 }
-isBrowser.is = {
-  edge: isEdge,
-  chrome: isChrome,
-  firefox: isFirefox
-};
+function browser() {
+  /* ... */
+}
+browser.is = { edge, chrome, firefox };
 
-skip.condition({ browser: isBrowser });
+skip.condition({ browser });
+
+skip.if.browser.is.firefox.
+it ('should halt and catch fire', function() {
+  /* ... */
+})
 ```
 
 ## Skipping tests permanently
 
-This module will call `it.skip()` or `describe.skip()` normally if the condition specified evaluates to true. This means the test will be marked by Mocha as **pending**. If the test in question will never ever pass and should be skipped permanently, you can accomplish that by adding `forever` to the expression:
+This module will normally call `it.skip()` or `describe.skip()` when the condition specified evaluates to true. This means the test will be marked by Mocha as **pending**. If the test in question will never ever pass and should be skipped permanently, you can accomplish that by adding `forever` to the expression:
 
 ```js
 skip.forever.if.browser.is.ie.
@@ -138,7 +148,7 @@ The synonyms `entirely` and `permanently` can be used in place of `forever`.
 
 ## Inverting conditions
 
-Normally, a test is skipped if the condition specified is true. You can invert the behavior--skipping a test when the condition is false--by using `unless` instead of `if`:
+Normally, a test is skipped when the condition specified is true. You can invert the behavior--skipping a test when the condition is false--by using `unless` instead of `if`:
 
 ```js
 skip.unless.os.is.mac.and.browser.is.chrome.
