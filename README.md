@@ -157,7 +157,7 @@ describe('Browser specific test', function() {
 })
 ```
 
-The synonym `util` can also be used.
+The synonym `until` can also be used.
 
 ## Parametric conditions
 
