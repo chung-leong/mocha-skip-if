@@ -74,7 +74,7 @@ describe('Browser specific test', function() {
 })
 ```
 
-In the example above, the tokens `browser` and `is` doesn't do anything. They are just there to make the code read like normal English.
+In the example above, the tokens `browser` and `is` don't really do anything. They are just there to make the code read like normal English.
 
 You can also define conditions by passing a `string` and a `boolean` or a `function` to `skip.condition()`:
 
