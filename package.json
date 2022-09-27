@@ -2,7 +2,7 @@
   "name": "mocha-skip-if",
   "description": "Skipping Mocha tests based on conditions",
   "author": "Chung Leong",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "main": "./index.js",
   "preferGlobal": false,
   "repository": "git://github.com/chung-leong/mocha-skip-if.git",
@@ -23,11 +23,11 @@
     "index.js"
   ],
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha -- test/*.js",
-    "test:watch": "./node_modules/mocha/bin/mocha --parallel --watch -- test/*.js"
+    "test": "./node_modules/mocha/bin/mocha.js -- test/*.js",
+    "test:watch": "./node_modules/mocha/bin/mocha.js --parallel --watch -- test/*.js"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "mocha": "^8.2.1"
+    "chai": "^4.3.6",
+    "mocha": "^10.0.0"
   }
 }
