@@ -46,6 +46,19 @@ it('should wipe out half of all life in the universe', function() {
 })
 ```
 
+If a function is passed, then the function will be called and its return value determines whether the test is skipped:
+
+```js
+function isCatDead() {
+  return Math.random() >= 0.5;
+}
+
+skip.if(isCatDead).
+it('should send cat back in time to search for the soul stone', function() {
+  /* ... */
+})
+```
+
 ## Defining conditions
 
 Multiple conditions can be specified by passing an object to `skip.condition()`. This object can in turn contain multiple objects, whose keys are treated as semantically meaningful tokens:
@@ -158,6 +171,33 @@ describe('Browser specific test', function() {
 ```
 
 The synonym `until` can also be used.
+
+Extra care needs to be taken when using `unless` to check for existence of a function as the function could end up being called instead. The following, for instance, does not work:
+
+```js
+skip.unless(global.gc).
+it('should not leak memory', function() {
+  /* ... */
+})
+```
+
+The test will be skipped even when Node is started with the command-line option `--expose-gc`, since `gc()` returns `undefined`. You need to do this instead:
+
+```js
+skip.unless(!!global.gc).
+it('should not leak memory', function() {
+  /* ... */
+})
+```
+
+or
+
+```js
+skip.if(!global.gc).
+it('should not leak memory', function() {
+  /* ... */
+})
+```
 
 ## Parametric conditions
 
