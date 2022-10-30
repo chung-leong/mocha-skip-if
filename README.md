@@ -97,6 +97,15 @@ skip.condition('browser.is.chrome', isChrome);
 skip.condition('browser.is.firefox', isFirefox);
 ```
 
+Starting from v1.0.2, you can do this:
+
+```js
+skip
+  .condition('browser.is.edge', isEdge)
+  .condition('browser.is.chrome', isChrome)
+  .condition('browser.is.firefox', isFirefox);
+```
+
 Conditions can be redefined. In the examples above, `browser` is not a condition. It's just a word you have to specify for semantic reason. The expression `skip.if.browser.it()` would cause an error. We can make `skip.if.browser` available as a check for whether the environment is a generic web-browser by redefining it:
 
 ```js

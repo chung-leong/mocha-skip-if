@@ -2,7 +2,7 @@
   "name": "mocha-skip-if",
   "description": "Skipping Mocha tests based on conditions",
   "author": "Chung Leong",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "./index.js",
   "preferGlobal": false,
   "repository": "git://github.com/chung-leong/mocha-skip-if.git",

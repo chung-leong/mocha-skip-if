@@ -329,6 +329,7 @@ class Skip extends Word {
     for (let [ name, func ] of Object.entries(def)) {
       this._create(name, func, [], null);
     }
+    return this;
   }
 }
 

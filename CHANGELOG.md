@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.2
+
+* Allowing chaining of calls to skip.condition()
+
 ## 1.0.1
 
 * Added section about functions as parameters to README
