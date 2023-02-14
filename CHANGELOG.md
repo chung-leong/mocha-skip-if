@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.0.3
+
+* Fixed .forever for describe() 
+* Fixed skip with no conditions
+
 ## 1.0.2
 
 * Allowing chaining of calls to skip.condition()

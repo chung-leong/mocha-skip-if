@@ -232,6 +232,7 @@ class Skip extends Word {
     if (this._inverted) {
       result = !result;
     }
+    this._tokens.splice(0);
     return result;
   }
 
@@ -299,7 +300,7 @@ class Skip extends Word {
 
   describe(desc, func) {
     if (this._eval()) {
-      if (this.mode !== 'permanent') {
+      if (this._mode !== 'permanent') {
         describe.skip(desc, func);
       }
     } else {
